@@ -80,3 +80,15 @@ module Shaun.Data.Marshall where
     decode (ListObj []) = Just Nothing
     decode _ = Nothing
 
+  instance (Shaun a, Shaun b) => Shaun (Either a b) where
+    encode (Left a) = tree [("left", encode a)]
+    encode (Right b) = tree [("right", encode b)]
+
+    decode (TreeObj [either]) = case either of
+      ("left", a) -> case decode a of
+        Just va -> Just (Left va)
+        Nothing -> Nothing
+      ("right", b) -> case decode b of
+        Just vb -> Just (Right vb)
+        Nothing -> Nothing
+    decode _ = Nothing
