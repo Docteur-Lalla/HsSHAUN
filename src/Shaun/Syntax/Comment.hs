@@ -25,7 +25,7 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-module Shaun.Syntax.Comment where
+module Shaun.Syntax.Comment (removeComments) where
   -- |Type of SHAUN comment
   data Comment = CSingleLine | CMultiLine | Parenthese
 
@@ -43,6 +43,14 @@ module Shaun.Syntax.Comment where
   skipComment Parenthese [] = Nothing
   skipComment Parenthese (')':xs) = Just xs
   skipComment Parenthese (_:xs) = skipComment Parenthese xs
+
+  skipStringContents :: String -> Maybe (String, String)
+  skipStringContents = skipStringContents' ""
+    where
+      skipStringContents' acc "" = Nothing
+      skipStringContents' acc ('\\':'"':xs) = skipStringContents' (acc ++ "\\\"") xs
+      skipStringContents' acc ('"':xs) = Just ('"':(acc ++ "\""), xs)
+      skipStringContents' acc (x:xs) = skipStringContents' (acc ++ (x:"")) xs
 
   -- |Function going through the string to remove comments
   -- It returns Nothing if a C multiline or parentheses based comment is incomplete
@@ -63,4 +71,8 @@ module Shaun.Syntax.Comment where
       removeComments' acc ('/':'/':xs) = skip CSingleLine acc xs
       removeComments' acc ('/':'*':xs) = skip CMultiLine acc xs
       removeComments' acc ('(':xs) = skip Parenthese acc xs
+      removeComments' acc ('"':xs) =
+        case skipStringContents xs of
+          Nothing -> Nothing
+          Just (s, tl) -> removeComments' (acc ++ s) tl
       removeComments' acc (x:xs) = removeComments' (acc ++ (x:"")) xs

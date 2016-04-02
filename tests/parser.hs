@@ -25,19 +25,30 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-import Shaun.Syntax.Comment
-
-code = "(this is a comment)\n" ++
-  "obj: {\n" ++
-  "  // This is an object, you see\n" ++
-  "  str: \"this is (a) string\"\n" ++
-  "  int: 9.0 km /* Some distance */\n" ++
-  "}"
+import Shaun.Syntax.Parser
+import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Error
 
 main =
   do
-    putStrLn ("Code to analyze :\n" ++ code)
-    let cleanCode = removeComments code
-    case cleanCode of
-      Nothing -> putStrLn "\n\nInvalid comments"
-      Just text -> putStrLn ("\n\nNew code :\n" ++ text)
+    case parse parseString "none" "\"this is a tasty burger\"" of
+      Left err -> putStrLn ("Parsing string : " ++ show err)
+      Right str -> putStrLn ("String : " ++ str)
+    case parse parseString "none" "\"this is\n a \\\"tasty\\\" burger\"" of
+      Left err -> putStrLn ("Parsing string : " ++ show err)
+      Right str -> putStrLn ("String : " ++ str)
+    case parse parseNumber "none" "56" of
+      Left err -> putStrLn ("Parsing number : " ++ show err)
+      Right num -> putStrLn ("Number : " ++ show num)
+    case parse parseNumber "none" "56.3" of
+      Left err -> putStrLn ("Parsing number : " ++ show err)
+      Right num -> putStrLn ("Number : " ++ show num)
+    case parse parseNumber "none" "56.3E-1" of
+      Left err -> putStrLn ("Parsing number : " ++ show err)
+      Right num -> putStrLn ("Number : " ++ show num)
+    case parse parseBoolean "none" "true" of
+      Left err -> putStrLn ("Parsing boolean : " ++ show err)
+      Right b -> putStrLn ("Boolean : " ++ show b)
+    case parse parseBoolean "none" "false" of
+      Left err -> putStrLn ("Parsing boolean : " ++ show err)
+      Right b -> putStrLn ("Boolean : " ++ show b)

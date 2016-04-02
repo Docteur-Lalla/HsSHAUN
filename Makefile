@@ -8,9 +8,11 @@ $(BINDIR)/Shaun/Syntax/Parser.o \
 TESTDIR=tests
 TESTOBJS=\
 $(BINDIR)/tests/comment.o \
+$(BINDIR)/tests/parser.o \
 
 TESTS=\
 $(BINDIR)/tests/comment \
+$(BINDIR)/tests/parser \
 
 HC=ghc
 HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)"
@@ -30,5 +32,8 @@ $(BINDIR)/Shaun/Syntax/Parser.o: $(BINDIR)/Shaun/Syntax/Comment.hi $(BINDIR)/Sha
 $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
 	$(HC) -o $@ -c $< -i"$(BINDIR)" -outputdir $(BINDIR)/tests
 
-$(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o bin/Shaun/Syntax/Comment.o
+$(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
 	$(HC) -o $@ -i"$(BINDIR)" $^
+
+$(BINDIR)/tests/parser: $(BINDIR)/Shaun/Syntax/Comment.o $(BINDIR)/Shaun/Syntax/Parser.o $(BINDIR)/tests/parser.o
+	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^

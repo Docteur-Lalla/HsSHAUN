@@ -26,6 +26,56 @@
  -}
 
 module Shaun.Syntax.Parser where
-  import Shaun.Data.Type
+  import qualified Shaun.Data.Type as ShaunType
   import Shaun.Syntax.Comment
-  import Text.ParserCombinators.Parsec
+  import Text.ParserCombinators.Parsec hiding (spaces)
+
+  -- |Parser for numbers
+  parseNumber :: Parser Double
+  parseNumber =
+    do
+      val <- parse
+      return (read val)
+    where
+      parse =
+        do
+          full <- many1 (oneOf "1234567890")
+          dec <- option "" $ do
+            char '.'
+            val <- many1 (oneOf "1234567890")
+            return ('.':val)
+          exp <- option "" $ do
+            e <- oneOf "Ee"
+            sign <- option '+' (char '-')
+            val <- many1 (oneOf "1234567890")
+            return (e:sign:val)
+          return (full ++ dec ++ exp)
+
+  -- |Parser for booleans
+  parseBoolean :: Parser Bool
+  parseBoolean =
+    do
+      val <- (string "true" <|> string "false")
+      return $ case val of
+        "true" -> True
+        "false" -> False
+
+  -- |Parser for strings
+  parseString :: Parser String
+  parseString =
+    do
+      char '"'
+      val <- many (parseEscape <|> noneOf "\"")
+      char '"'
+      return val
+    where
+      parseEscape =
+        do
+          char '\\'
+          c <- oneOf "\\nrt\""
+          return $ case c of
+            '\\' -> '\\'
+            'n' -> '\n'
+            'r' -> '\r'
+            't' -> '\t'
+            '"' -> '"'

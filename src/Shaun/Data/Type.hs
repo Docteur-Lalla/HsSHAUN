@@ -27,14 +27,14 @@
 
 module Shaun.Data.Type where
   -- |SHAUN data type
-  data Object = NumberObj (Float, Maybe String)
+  data Object = NumberObj (Double, Maybe String)
     | BoolObj Bool
     | StringObj String
     | ListObj [Object]
     | TreeObj [(String, Object)]
 
   -- |helper function to create SHAUN numbers
-  number :: Float -> Maybe String -> Object
+  number :: Double -> Maybe String -> Object
   number f unit = NumberObj (f, unit)
 
   -- |helper function to create SHAUN booleans
