@@ -29,6 +29,11 @@ import Shaun.Syntax.Parser
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
 
+code = "obj: {" ++
+  "int: 64 m\n" ++
+  "list: [ 78 km, \"yolo\", true ]\n" ++
+  "tree: { a: 5\nb: 1 rad } }\n\ni:42 life"
+
 main =
   do
     case parse parseString "none" "\"this is a tasty burger\"" of
@@ -52,3 +57,13 @@ main =
     case parse parseBoolean "none" "false" of
       Left err -> putStrLn ("Parsing boolean : " ++ show err)
       Right b -> putStrLn ("Boolean : " ++ show b)
+    case parse parseShaunList "none" "[ 67.3, \"bonsoir\", [ 1, true ] ]" of
+      Left err -> putStrLn ("Parsing list : " ++ show err)
+      Right l -> putStrLn ("List : " ++ show l)
+    case parse parseShaunTree "none" "{\nint : 67.3 km\nnum: 4\n str : \"bonsoir\"\n list : [ 1, true ] }" of
+      Left err -> putStrLn ("Parsing tree : " ++ show err)
+      Right t -> putStrLn ("Tree : " ++ show t)
+    putStrLn "\n\n"
+    case parseShaunCode code of
+      Left err -> putStrLn ("Parsing complete code : " ++ err)
+      Right val -> putStrLn ("Complete data : " ++ show val)

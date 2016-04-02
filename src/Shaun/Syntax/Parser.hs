@@ -30,6 +30,13 @@ module Shaun.Syntax.Parser where
   import Shaun.Syntax.Comment
   import Text.ParserCombinators.Parsec hiding (spaces)
 
+  spaces :: Parser Char
+  spaces = oneOf " \t\n"
+
+  -- |Function scanning blank characters (newline is not allowed)
+  blank :: Parser Char
+  blank = oneOf " \t"
+
   -- |Parser for numbers
   parseNumber :: Parser Double
   parseNumber =
@@ -50,6 +57,15 @@ module Shaun.Syntax.Parser where
             val <- many1 (oneOf "1234567890")
             return (e:sign:val)
           return (full ++ dec ++ exp)
+
+  -- |Parser for numbers with unit
+  parseNumberWithUnit :: Parser (Double, Maybe String)
+  parseNumberWithUnit =
+    do
+      num <- parseNumber
+      skipMany blank
+      unit <- try (optionMaybe (many1 letter))
+      return (num, unit)
 
   -- |Parser for booleans
   parseBoolean :: Parser Bool
@@ -79,3 +95,76 @@ module Shaun.Syntax.Parser where
             'r' -> '\r'
             't' -> '\t'
             '"' -> '"'
+
+  -- |Parser for list of values
+  parseList :: Parser [ShaunType.Object]
+  parseList =
+    do
+      char '['
+      skipMany spaces
+      elems <- listElems `sepBy` (char ',')
+      char ']'
+      return elems
+    where
+      listElems =
+        do
+          skipMany spaces
+          val <- parseShaunValue
+          skipMany spaces
+          return val
+
+  -- |Parser for attribute bindings like attribute_name: "value"
+  parseShaunAttribute :: Parser (String, ShaunType.Object)
+  parseShaunAttribute =
+    do
+      skipMany blank
+      name <- many1 letter
+      skipMany blank
+      char ':'
+      skipMany blank
+      val <- parseShaunValue
+      skipMany blank
+      return (name, val)
+
+  -- |Parser for SHAUN trees
+  parseShaunTree :: Parser ShaunType.Object
+  parseShaunTree =
+    do
+      char '{'
+      skipMany spaces
+      pairs <- parseShaunAttribute `sepBy` (many1 newline)
+      skipMany spaces
+      char '}'
+      return (ShaunType.tree pairs)
+
+  parseShaunList = fmap ShaunType.list parseList
+  parseShaunNumber = fmap number parseNumberWithUnit
+    where number (n, u) = ShaunType.number n u
+  parseShaunBoolean = fmap ShaunType.boolean parseBoolean
+  parseShaunString = fmap ShaunType.string parseString
+
+  -- |Parser for SHAUN values
+  parseShaunValue :: Parser ShaunType.Object
+  parseShaunValue = parseShaunNumber
+    <|> parseShaunBoolean
+    <|> parseShaunString
+    <|> parseShaunList
+    <|> parseShaunTree
+
+  -- |Parser for a complete SHAUN code
+  parseShaunFile :: String -> String -> Either String ShaunType.Object
+  parseShaunFile filename code =
+    case clean_code of
+      Nothing -> Left "could not parse end of comment"
+      Just text -> case (parse parser filename text) of
+        Left err -> Left (show err)
+        Right val -> Right val
+    where
+      clean_code = removeComments code
+      parser =
+        do
+          vals <- parseShaunAttribute `sepBy` (many1 newline)
+          return (ShaunType.tree vals)
+
+  parseShaunCode :: String -> Either String ShaunType.Object
+  parseShaunCode = parseShaunFile ""

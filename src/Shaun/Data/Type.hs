@@ -65,20 +65,20 @@ module Shaun.Data.Type where
   getUnit _ = Nothing
 
   -- |Predicate checking if a SHAUN tree has the given child object
-  hasChild :: String -> Object -> Bool
-  hasChild _ (TreeObj []) = False
-  hasChild child (TreeObj ((name, _):xs))
+  hasAttribute :: String -> Object -> Bool
+  hasAttribute _ (TreeObj []) = False
+  hasAttribute child (TreeObj ((name, _):xs))
     | (child == name) = True
-    | otherwise = hasChild child (TreeObj xs)
-  hasChild _ _ = False
+    | otherwise = hasAttribute child (TreeObj xs)
+  hasAttribute _ _ = False
 
   -- |Function returning the specified child object of a tree object
-  getChild :: String -> Object -> Maybe Object
-  getChild _ (TreeObj []) = Nothing
-  getChild child (TreeObj ((name, obj):xs))
+  getAttribute :: String -> Object -> Maybe Object
+  getAttribute _ (TreeObj []) = Nothing
+  getAttribute child (TreeObj ((name, obj):xs))
     | (child == name) = Just obj
-    | otherwise = getChild child (TreeObj xs)
-  getChild _ _ = Nothing
+    | otherwise = getAttribute child (TreeObj xs)
+  getAttribute _ _ = Nothing
 
   -- |Function returning the nth element of a list object
   getListElem :: Int -> Object -> Maybe Object
@@ -87,3 +87,14 @@ module Shaun.Data.Type where
     | length l <= n = Nothing
     | otherwise = Just (l !! n)
   getListElem _ _ = Nothing
+
+  instance Show Object where
+    show (NumberObj (num, Nothing)) = show num
+    show (NumberObj (num, Just unit)) = show num ++ " " ++ unit
+    show (StringObj s) = "\"" ++ s ++ "\""
+    show (BoolObj b) = show b
+    show (ListObj []) = "[]"
+    show (ListObj (x:xs)) = "[" ++ foldl show_list (show x) xs ++ "]"
+      where show_list a b = a ++ ", " ++ show b
+    show (TreeObj t) = "{" ++ foldl show_tree "" t ++ "\n}"
+      where show_tree a (name, val) = a ++ "\n" ++ name ++ ": " ++ show val

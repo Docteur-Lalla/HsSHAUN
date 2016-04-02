@@ -35,5 +35,9 @@ $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
 $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
 	$(HC) -o $@ -i"$(BINDIR)" $^
 
-$(BINDIR)/tests/parser: $(BINDIR)/Shaun/Syntax/Comment.o $(BINDIR)/Shaun/Syntax/Parser.o $(BINDIR)/tests/parser.o
+$(BINDIR)/tests/parser:\
+$(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Parser.o \
+$(BINDIR)/tests/parser.o
 	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
