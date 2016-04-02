@@ -2,6 +2,7 @@ BINDIR=bin
 SRCDIR=src
 OBJS=\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Data/Marshall.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
