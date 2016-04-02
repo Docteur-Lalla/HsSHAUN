@@ -12,9 +12,22 @@ SHAUN recognizes five types of data :
 * Numbers (every number is floating-point)
 * Booleans
 * Strings
-* Heterogenous lists
+* Heterogeneous lists
 * Object node
 
 ----------
 
 HsSHAUN supplies Haskell with a full featured SHAUN interpreter allowing the user to retrieve, write and manipulate his datas. HsSHAUN is distributed under BSD 3-clauses license.
+
+---------
+
+Compile and install HsSHAUN
+===========================
+
+Simply run the following commands :
+
+```
+$ cabal configure
+$ cabal build
+$ cabal install
+```
