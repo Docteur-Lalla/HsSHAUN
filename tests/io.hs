@@ -25,18 +25,20 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+import System.Environment
+import Shaun.IO
 import Shaun.Syntax.Parser
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
-
-code = "obj: {" ++
-  "int: 64 m\n" ++
-  "list: [ 78 km, \"yolo\", true ]\n" ++
-  "tree: { a: 5\nb: 1 rad }\n}\n\ni:42 life\n" ++
-  "objb: { int: 2 }"
+import Shaun.Data.Type
 
 main =
   do
-    case parseShaunCode code of
-      Left err -> putStrLn ("Parsing complete code : " ++ err)
-      Right val -> putStrLn ("Complete data : " ++ show val)
+    args <- getArgs
+    let filename = args !! 0
+
+    contents <- readFile filename
+    putStrLn ("BEGIN\n" ++ contents ++ "\nEND")
+
+    ret <- parseShaunFromFile filename
+    case ret of
+      Left err -> putStrLn err
+      Right val -> putStrLn (show val)

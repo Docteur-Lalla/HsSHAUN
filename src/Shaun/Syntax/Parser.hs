@@ -25,13 +25,13 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-module Shaun.Syntax.Parser where
+module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   import qualified Shaun.Data.Type as ShaunType
   import Shaun.Syntax.Comment
   import Text.ParserCombinators.Parsec hiding (spaces)
 
   spaces :: Parser Char
-  spaces = oneOf " \t\n"
+  spaces = newline <|> char ' ' <|> char '\t'
 
   -- |Function scanning blank characters (newline is not allowed)
   blank :: Parser Char
@@ -100,9 +100,9 @@ module Shaun.Syntax.Parser where
   parseList :: Parser [ShaunType.Object]
   parseList =
     do
-      char '['
       skipMany spaces
-      elems <- listElems `sepBy` (char ',')
+      char '['
+      elems <- listElems `sepEndBy` (char ',')
       char ']'
       return elems
     where
@@ -130,11 +130,13 @@ module Shaun.Syntax.Parser where
   parseShaunTree :: Parser ShaunType.Object
   parseShaunTree =
     do
+      skipMany spaces
       char '{'
       skipMany spaces
-      pairs <- parseShaunAttribute `sepBy` (many1 newline)
+      pairs <- parseShaunAttribute `sepEndBy` (many1 newline)
       skipMany spaces
       char '}'
+      skipMany blank
       return (ShaunType.tree pairs)
 
   parseShaunList = fmap ShaunType.list parseList
@@ -148,7 +150,7 @@ module Shaun.Syntax.Parser where
   parseShaunValue = parseShaunNumber
     <|> parseShaunBoolean
     <|> parseShaunString
-    <|> parseShaunList
+    <|> (try parseShaunList)
     <|> parseShaunTree
 
   -- |Parser for a complete SHAUN code
@@ -156,15 +158,11 @@ module Shaun.Syntax.Parser where
   parseShaunFile filename code =
     case clean_code of
       Nothing -> Left "could not parse end of comment"
-      Just text -> case (parse parser filename text) of
+      Just text -> case (parse parseShaunTree filename ("{" ++ text ++ "}")) of
         Left err -> Left (show err)
         Right val -> Right val
     where
       clean_code = removeComments code
-      parser =
-        do
-          vals <- parseShaunAttribute `sepBy` (many1 newline)
-          return (ShaunType.tree vals)
 
   parseShaunCode :: String -> Either String ShaunType.Object
   parseShaunCode = parseShaunFile ""

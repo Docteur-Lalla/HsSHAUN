@@ -25,18 +25,13 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-import Shaun.Syntax.Parser
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+module Shaun.IO where
+  import System.IO
+  import Shaun.Data.Type
+  import Shaun.Syntax.Parser
 
-code = "obj: {" ++
-  "int: 64 m\n" ++
-  "list: [ 78 km, \"yolo\", true ]\n" ++
-  "tree: { a: 5\nb: 1 rad }\n}\n\ni:42 life\n" ++
-  "objb: { int: 2 }"
-
-main =
-  do
-    case parseShaunCode code of
-      Left err -> putStrLn ("Parsing complete code : " ++ err)
-      Right val -> putStrLn ("Complete data : " ++ show val)
+  parseShaunFromFile :: String -> IO (Either String Object)
+  parseShaunFromFile filename =
+    do
+      contents <- ($!) readFile filename
+      return (parseShaunFile filename contents)
