@@ -30,12 +30,12 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   import Shaun.Syntax.Comment
   import Text.ParserCombinators.Parsec hiding (spaces)
 
-  spaces :: Parser Char
-  spaces = newline <|> char ' ' <|> char '\t'
-
   -- |Function scanning blank characters (newline is not allowed)
   blank :: Parser Char
-  blank = oneOf " \t"
+  blank = oneOf " \t,"
+
+  spaces :: Parser Char
+  spaces = blank <|> newline
 
   -- |Parser for numbers
   parseNumber :: Parser Double
@@ -46,17 +46,18 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     where
       parse =
         do
-          full <- many1 (oneOf "1234567890")
+          sign <- option '0' (char '-')
+          full <- many1 digit
           dec <- option "" $ do
             char '.'
-            val <- many1 (oneOf "1234567890")
+            val <- many1 digit
             return ('.':val)
           exp <- option "" $ do
             e <- oneOf "Ee"
-            sign <- option '+' (char '-')
-            val <- many1 (oneOf "1234567890")
+            sign <- option '0' (char '+' <|> char '-')
+            val <- many1 digit
             return (e:sign:val)
-          return (full ++ dec ++ exp)
+          return (sign:(full ++ dec ++ exp))
 
   -- |Parser for numbers with unit
   parseNumberWithUnit :: Parser (Double, Maybe String)
@@ -102,7 +103,9 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     do
       skipMany spaces
       char '['
-      elems <- listElems `sepEndBy` (char ',')
+      skipMany spaces
+      elems <- listElems `sepEndBy` (many spaces)
+      skipMany spaces
       char ']'
       return elems
     where
@@ -118,7 +121,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   parseShaunAttribute =
     do
       skipMany blank
-      name <- many1 letter
+      name <- many (letter <|> digit <|> char '_')
       skipMany blank
       char ':'
       skipMany blank
@@ -133,11 +136,12 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       skipMany spaces
       char '{'
       skipMany spaces
-      pairs <- parseShaunAttribute `sepEndBy` (many1 newline)
+      pairs <- parseShaunAttribute `sepEndBy` (many1 sep)
       skipMany spaces
       char '}'
       skipMany blank
       return (ShaunType.tree pairs)
+    where sep = newline >> many spaces
 
   parseShaunList = fmap ShaunType.list parseList
   parseShaunNumber = fmap number parseNumberWithUnit
@@ -151,7 +155,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     <|> parseShaunBoolean
     <|> parseShaunString
     <|> (try parseShaunList)
-    <|> parseShaunTree
+    <|> (try parseShaunTree)
 
   -- |Parser for a complete SHAUN code
   parseShaunFile :: String -> String -> Either String ShaunType.Object
