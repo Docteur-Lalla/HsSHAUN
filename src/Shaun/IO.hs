@@ -33,5 +33,13 @@ module Shaun.IO where
   parseShaunFromFile :: String -> IO (Either String Object)
   parseShaunFromFile filename =
     do
-      contents <- ($!) readFile filename
+      contents <- readFile filename
       return (parseShaunFile filename contents)
+
+  writeShaunToFile :: String -> Object -> IO ()
+  writeShaunToFile filename = writeFile filename . dedent . removeBrackets . show
+    where
+      removeBrackets = unlines . init . tail . lines
+      dedent = unlines . map removeSpaces . lines
+      removeSpaces (' ':' ':xs) = xs
+      removeSpaces l = l

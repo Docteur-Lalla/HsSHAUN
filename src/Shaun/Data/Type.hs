@@ -94,7 +94,20 @@ module Shaun.Data.Type where
     show (StringObj s) = "\"" ++ s ++ "\""
     show (BoolObj b) = show b
     show (ListObj []) = "[]"
-    show (ListObj (x:xs)) = "[" ++ foldl show_list (show x) xs ++ "]"
-      where show_list a b = a ++ ", " ++ show b
-    show (TreeObj t) = "{" ++ foldl show_tree "" t ++ "\n}"
-      where show_tree a (name, val) = a ++ "\n" ++ name ++ ": " ++ show val
+    show (ListObj l@(x:xs)) = case any pred l of
+      False -> "[" ++ foldl (\a b -> a ++ ", " ++ show b) (show x) xs ++ "]"
+      True -> "[" ++ indent (foldl (\a b -> a ++ "\n" ++ b) "" lin) ++ "]"
+        where
+          sl = foldl (\a b -> a ++ "\n" ++ b) (show x) (map show xs)
+          lin = lines sl
+      where
+        pred (ListObj _) = True
+        pred (TreeObj _) = True
+        pred (StringObj _) = True
+        pred _ = False
+
+        indent s = unlines (map (\line -> "  " ++ line) (lines s))
+    show (TreeObj t) = "{" ++ indent (foldl show_tree "" t) ++ "}"
+      where
+        show_tree a (name, val) = a ++ "\n" ++ name ++ ": " ++ show val
+        indent s = unlines (map (\line -> "  " ++ line) (lines s))

@@ -12,11 +12,13 @@ TESTOBJS=\
 $(BINDIR)/tests/comment.o \
 $(BINDIR)/tests/parser.o \
 $(BINDIR)/tests/io.o \
+$(BINDIR)/tests/show.o \
 
 TESTS=\
 $(BINDIR)/tests/comment \
 $(BINDIR)/tests/parser \
 $(BINDIR)/tests/io \
+$(BINDIR)/tests/show \
 
 HC=ghc
 HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)"
@@ -53,4 +55,12 @@ $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/io.o
+	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
+
+$(BINDIR)/tests/show:\
+$(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Parser.o \
+$(BINDIR)/Shaun/IO.o \
+$(BINDIR)/tests/show.o
 	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
