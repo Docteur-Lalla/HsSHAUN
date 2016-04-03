@@ -47,5 +47,6 @@ main =
       Left err -> putStrLn err
       Right v ->
         do
+          putStrLn "Parsing finished.\nPreparing to show."
           putStrLn (show v)
           writeShaunToFile output v

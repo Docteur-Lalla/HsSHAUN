@@ -21,7 +21,7 @@ $(BINDIR)/tests/io \
 $(BINDIR)/tests/show \
 
 HC=ghc
-HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)" -O
+HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)" -O2
 LDFLAGS=
 LIB=hsshaun
 

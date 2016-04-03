@@ -92,7 +92,8 @@ module Shaun.Data.Type where
     show (NumberObj (num, Nothing)) = show num
     show (NumberObj (num, Just unit)) = show num ++ " " ++ unit
     show (StringObj s) = "\"" ++ s ++ "\""
-    show (BoolObj b) = show b
+    show (BoolObj True) = "true"
+    show (BoolObj False) = "false"
     show (ListObj []) = "[]"
     show (ListObj l@(x:xs)) = case any pred l of
       False -> "[" ++ foldl (\a b -> a ++ ", " ++ show b) (show x) xs ++ "]"
