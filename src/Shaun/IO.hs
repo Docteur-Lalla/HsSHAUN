@@ -30,12 +30,15 @@ module Shaun.IO where
   import Shaun.Data.Type
   import Shaun.Syntax.Parser
 
+  -- |Reads the specified file and parse SHAUN code
+  -- This function returns a message if the reading or parsing fails
   parseShaunFromFile :: String -> IO (Either String Object)
   parseShaunFromFile filename =
     do
       contents <- readFile filename
       return (parseShaunFile filename contents)
 
+  -- |Writes SHAUN code of the given object into the specified file
   writeShaunToFile :: String -> Object -> IO ()
   writeShaunToFile filename = writeFile filename . dedent . removeBrackets . show
     where

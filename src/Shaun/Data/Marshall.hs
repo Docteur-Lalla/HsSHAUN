@@ -32,7 +32,9 @@ module Shaun.Data.Marshall where
   import Control.Monad
 
   class Shaun a where
+    -- |Encode the given data to a SHAUN object
     encode :: a -> Object
+    -- |Retrieve data from a SHAUN object
     decode :: Object -> Maybe a
 
   instance Shaun Double where

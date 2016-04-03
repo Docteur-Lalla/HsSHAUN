@@ -157,7 +157,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     <|> (try parseShaunList)
     <|> (try parseShaunTree)
 
-  -- |Parser for a complete SHAUN code
+  -- |Parser for a complete SHAUN code retrieved from a file
   parseShaunFile :: String -> String -> Either String ShaunType.Object
   parseShaunFile filename code =
     case clean_code of
@@ -168,5 +168,6 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     where
       clean_code = removeComments code
 
+  -- |Parser for a complete SHAUN code
   parseShaunCode :: String -> Either String ShaunType.Object
   parseShaunCode = parseShaunFile ""
