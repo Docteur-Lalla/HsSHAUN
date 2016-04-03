@@ -21,7 +21,7 @@ $(BINDIR)/tests/io \
 $(BINDIR)/tests/show \
 
 HC=ghc
-HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)"
+HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)" -O
 LDFLAGS=
 LIB=hsshaun
 
@@ -40,14 +40,14 @@ $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
 	$(HC) -o $@ -c $< -i"$(BINDIR)" -outputdir $(BINDIR)/tests
 
 $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
-	$(HC) -o $@ -i"$(BINDIR)" $^
+	$(HC) -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/parser:\
 $(BINDIR)/Shaun/Data/Type.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/tests/parser.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
+	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/io:\
 $(BINDIR)/Shaun/Data/Type.o \
@@ -55,7 +55,7 @@ $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/io.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
+	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/show:\
 $(BINDIR)/Shaun/Data/Type.o \
@@ -63,4 +63,4 @@ $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/show.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^
+	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)

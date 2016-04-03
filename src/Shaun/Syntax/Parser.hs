@@ -42,7 +42,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   parseNumber =
     do
       val <- parse
-      return (read val)
+      return $! (read val)
     where
       parse =
         do
@@ -57,7 +57,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
             sign <- option '0' (char '+' <|> char '-')
             val <- many1 digit
             return (e:sign:val)
-          return (sign:(full ++ dec ++ exp))
+          return $! (sign:(full ++ dec ++ exp))
 
   -- |Parser for numbers with unit
   parseNumberWithUnit :: Parser (Double, Maybe String)
@@ -66,14 +66,14 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       num <- parseNumber
       skipMany blank
       unit <- try (optionMaybe (many1 letter))
-      return (num, unit)
+      return $! (num, unit)
 
   -- |Parser for booleans
   parseBoolean :: Parser Bool
   parseBoolean =
     do
       val <- (string "true" <|> string "false")
-      return $ case val of
+      return $! case val of
         "true" -> True
         "false" -> False
 
@@ -84,13 +84,13 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       char '"'
       val <- many (parseEscape <|> noneOf "\"")
       char '"'
-      return val
+      return $! val
     where
       parseEscape =
         do
           char '\\'
           c <- oneOf "\\nrt\""
-          return $ case c of
+          return $! case c of
             '\\' -> '\\'
             'n' -> '\n'
             'r' -> '\r'
@@ -107,14 +107,14 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       elems <- listElems `sepEndBy` (many spaces)
       skipMany spaces
       char ']'
-      return elems
+      return $! elems
     where
       listElems =
         do
           skipMany spaces
           val <- parseShaunValue
           skipMany spaces
-          return val
+          return $! val
 
   -- |Parser for attribute bindings like attribute_name: "value"
   parseShaunAttribute :: Parser (String, ShaunType.Object)
@@ -127,7 +127,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       skipMany blank
       val <- parseShaunValue
       skipMany blank
-      return (name, val)
+      return $! (name, val)
 
   -- |Parser for SHAUN trees
   parseShaunTree :: Parser ShaunType.Object
@@ -140,7 +140,7 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
       skipMany spaces
       char '}'
       skipMany blank
-      return (ShaunType.tree pairs)
+      return $! (ShaunType.tree pairs)
     where sep = newline >> many spaces
 
   parseShaunList = fmap ShaunType.list parseList
@@ -154,8 +154,8 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   parseShaunValue = parseShaunNumber
     <|> parseShaunBoolean
     <|> parseShaunString
-    <|> (try parseShaunList)
-    <|> (try parseShaunTree)
+    <|> parseShaunList
+    <|> parseShaunTree
 
   -- |Parser for a complete SHAUN code retrieved from a file
   parseShaunFile :: String -> String -> Either String ShaunType.Object
