@@ -27,6 +27,7 @@
 
 module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
   import qualified Shaun.Data.Type as ShaunType
+  import Shaun.Data.Error
   import Shaun.Syntax.Comment
   import Text.Parsec hiding (spaces)
   import Text.Parsec.String
@@ -159,16 +160,16 @@ module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
     <|> parseShaunTree
 
   -- |Parser for a complete SHAUN code retrieved from a file
-  parseShaunFile :: String -> String -> Either String ShaunType.Object
+  parseShaunFile :: String -> String -> Either Error ShaunType.Object
   parseShaunFile filename code =
     case clean_code of
-      Nothing -> Left "could not parse end of comment"
+      Nothing -> Left (ParsingError "could not parse end of comment")
       Just text -> case parse parseShaunTree filename ("{" ++ text ++ "}") of
-        Left err -> Left (show err)
+        Left err -> Left (ParsingError (show err))
         Right val -> Right val
     where
       clean_code = removeComments code
 
   -- |Parser for a complete SHAUN code
-  parseShaunCode :: String -> Either String ShaunType.Object
+  parseShaunCode :: String -> Either Error ShaunType.Object
   parseShaunCode = parseShaunFile ""

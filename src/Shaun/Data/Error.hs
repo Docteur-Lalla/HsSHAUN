@@ -31,25 +31,10 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-import Shaun.Data.Type
-import Shaun.Data.Error
-import Shaun.IO
+module Shaun.Data.Error where
+  import Shaun.Data.Type
 
-import System.Environment
-
-main =
-  do
-    args <- getArgs
-    let filename = args !! 0
-    let output = args !! 1
-
-    res <- parseShaunFromFile filename
-    case res of
-      Left (ParsingError err) -> putStrLn err
-      Left (TypeError exp got) -> putStrLn
-        ("Expected type " ++ show exp ++ " got " ++ show got)
-      Right v ->
-        do
-          putStrLn "Parsing finished.\nPreparing to show."
-          putStrLn (show v)
-          writeShaunToFile output v
+  -- |Data describing a SHAUN related error
+  data Error = ParsingError String
+    -- |Type error, takes the expected type and the type of the faulty value
+    | TypeError Type Type

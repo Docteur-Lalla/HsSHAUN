@@ -2,6 +2,7 @@ BINDIR=bin
 SRCDIR=src
 OBJS=\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Data/Marshall.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
@@ -32,6 +33,7 @@ $(BINDIR)/%.o: $(SRCDIR)/%.hs
 
 # Dependencies
 $(BINDIR)/%.hi: $(BINDIR)/%.o
+$(BINDIR)/Shaun/Data/Error.o: $(BINDIR)/Shaun/Data/Type.hi
 $(BINDIR)/Shaun/Syntax/Parser.o: $(BINDIR)/Shaun/Syntax/Comment.hi $(BINDIR)/Shaun/Data/Type.hi
 $(BINDIR)/Shaun/IO.o: $(BINDIR)/Shaun/Syntax/Parser.hi $(BINDIR)/Shaun/Data/Type.hi
 
@@ -44,6 +46,7 @@ $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Commen
 
 $(BINDIR)/tests/parser:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/tests/parser.o
@@ -51,6 +54,7 @@ $(BINDIR)/tests/parser.o
 
 $(BINDIR)/tests/io:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
@@ -59,6 +63,7 @@ $(BINDIR)/tests/io.o
 
 $(BINDIR)/tests/show:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \

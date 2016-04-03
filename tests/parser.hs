@@ -25,6 +25,8 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+import Shaun.Data.Type
+import Shaun.Data.Error
 import Shaun.Syntax.Parser
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
@@ -38,5 +40,6 @@ code = "obj: {" ++
 main =
   do
     case parseShaunCode code of
-      Left err -> putStrLn ("Parsing complete code : " ++ err)
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing complete code : " ++ err)
       Right val -> putStrLn ("Complete data : " ++ show val)

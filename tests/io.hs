@@ -27,8 +27,9 @@
 
 import System.Environment
 import Shaun.IO
-import Shaun.Syntax.Parser
 import Shaun.Data.Type
+import Shaun.Data.Error
+import Shaun.Syntax.Parser
 
 main =
   do
@@ -40,5 +41,7 @@ main =
 
     ret <- parseShaunFromFile filename
     case ret of
-      Left err -> putStrLn err
+      Left (ParsingError err) -> putStrLn err
+      Left (TypeError exp got) -> putStrLn
+        ("Expected type " ++ show exp ++ " got " ++ show got)
       Right val -> putStrLn (show val)

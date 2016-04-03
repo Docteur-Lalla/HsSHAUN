@@ -112,3 +112,19 @@ module Shaun.Data.Type where
       where
         show_tree a (name, val) = a ++ "\n" ++ name ++ ": " ++ show val
         indent s = unlines (map (\line -> "  " ++ line) (lines s))
+
+  -- |Data type describing the possible types of a SHAUN value
+  -- It is used for error handling
+  data Type = NumberType
+    | StringType
+    | BoolType
+    | ListType
+    | ObjectType
+    deriving (Eq)
+
+  instance Show Type where
+    show NumberType = "number"
+    show StringType = "string"
+    show BoolType = "boolean"
+    show ListType = "list"
+    show ObjectType = "object"

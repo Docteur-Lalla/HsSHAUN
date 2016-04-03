@@ -28,11 +28,12 @@
 module Shaun.IO where
   import System.IO
   import Shaun.Data.Type
+  import Shaun.Data.Error
   import Shaun.Syntax.Parser
 
   -- |Reads the specified file and parse SHAUN code
   -- This function returns a message if the reading or parsing fails
-  parseShaunFromFile :: String -> IO (Either String Object)
+  parseShaunFromFile :: String -> IO (Either Error Object)
   parseShaunFromFile filename =
     do
       contents <- readFile filename
