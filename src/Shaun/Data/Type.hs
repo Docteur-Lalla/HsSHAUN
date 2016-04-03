@@ -128,3 +128,10 @@ module Shaun.Data.Type where
     show BoolType = "boolean"
     show ListType = "list"
     show ObjectType = "object"
+
+  typeOf :: Object -> Type
+  typeOf (NumberObj _) = NumberType
+  typeOf (StringObj _) = StringType
+  typeOf (BoolObj _) = BoolType
+  typeOf (ListObj _) = ListType
+  typeOf (TreeObj _) = ObjectType

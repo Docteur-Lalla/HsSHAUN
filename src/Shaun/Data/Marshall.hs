@@ -29,31 +29,26 @@
 
 module Shaun.Data.Marshall where
   import Shaun.Data.Type
+  import Shaun.Data.Error
   import Control.Monad
 
   class Shaun a where
     -- |Encode the given data to a SHAUN object
     encode :: a -> Object
     -- |Retrieve data from a SHAUN object
-    decode :: Object -> Maybe a
+    decode :: Object -> Either Error a
 
   instance Shaun Double where
     encode d = number d Nothing
 
-    decode (NumberObj (d, _)) = Just d
-    decode _ = Nothing
+    decode (NumberObj (d, _)) = Right d
+    decode v = Left (TypeError NumberType (typeOf v))
 
   instance Shaun Bool where
     encode b = boolean b
 
-    decode (BoolObj b) = Just b
-    decode _ = Nothing
-
-  instance Shaun Char where
-    encode c = string [c]
-
-    decode (StringObj [c]) = Just c
-    decode _ = Nothing
+    decode (BoolObj b) = Right b
+    decode v = Left (TypeError BoolType (typeOf v))
 
   instance Shaun a => Shaun [a] where
     encode l = list (map encode l)
@@ -61,26 +56,26 @@ module Shaun.Data.Marshall where
     decode (ListObj l) = format [] tmp
       where
         tmp = map decode l
-        format acc [] = Just acc
-        format acc (Nothing:xs) = Nothing
-        format acc (Just x:xs) = format (acc ++ [x]) xs
-    decode _ = Nothing
+        format acc [] = Right acc
+        format acc (Left err:xs) = Left err
+        format acc (Right x:xs) = format (acc ++ [x]) xs
+    decode v = Left (TypeError ListType (typeOf v))
 
   instance Shaun String where
     encode s = string s
 
-    decode (StringObj s) = Just s
-    decode _ = Nothing
+    decode (StringObj s) = Right s
+    decode v = Left (TypeError StringType (typeOf v))
 
   instance Shaun a => Shaun (Maybe a) where
     encode (Just v) = list [encode v]
     encode Nothing = list []
 
     decode (ListObj [v]) = case decode v of
-      Just m -> Just (Just m)
-      Nothing -> Nothing
-    decode (ListObj []) = Just Nothing
-    decode _ = Nothing
+      Right m -> Right (Just m)
+      Left err -> Left err
+    decode (ListObj []) = Right Nothing
+    decode v = Left (TypeError ListType (typeOf v))
 
   instance (Shaun a, Shaun b) => Shaun (Either a b) where
     encode (Left a) = tree [("left", encode a)]
@@ -88,9 +83,9 @@ module Shaun.Data.Marshall where
 
     decode (TreeObj [either]) = case either of
       ("left", a) -> case decode a of
-        Just va -> Just (Left va)
-        Nothing -> Nothing
+        Right va -> Right (Left va)
+        Left err -> Left err
       ("right", b) -> case decode b of
-        Just vb -> Just (Right vb)
-        Nothing -> Nothing
-    decode _ = Nothing
+        Right vb -> Right (Right vb)
+        Left err -> Left err
+    decode v = Left (TypeError ObjectType (typeOf v))
