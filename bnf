@@ -1,0 +1,39 @@
+exp ::= 'e'
+  | 'E'
+
+sign ::= '-'
+  | '+'
+
+number ::= '-' (many1 digit) ('.' (many1 digit)) (exp sign? (many1 digit))
+  | '-' (many1 digit) ('.' (many1 digit))
+  | '-' (many1 digit) (exp sign? (many1 digit))
+  | '-' (many1 digit)
+  | (many1 digit) ('.' (many1 digit)) (exp sign? (many1 digit))
+  | (many1 digit) ('.' (many1 digit))
+  | (many1 digit) (exp sign? (many1 digit))
+  | (many1 digit)
+
+string ::= '"' (many anything) '"'
+
+boolean ::= 'true'
+  | 'false'
+
+blank ::= ' '
+  | '\t'
+  | '\n'
+  | ','
+
+space ::= ' '
+  | '\t'
+
+list ::= '[' value sepBy (many blank) ']'
+
+tree ::= '{' pair sepBy (many blank) '}'
+
+value ::= tree
+  | list
+  | string
+  | boolean
+  | number ((many space) (many1 letter))?
+
+pair ::= ident (many space) '=' (many blank) value

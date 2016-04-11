@@ -47,9 +47,9 @@ module Shaun.Syntax.Comment (removeComments) where
   skipStringContents :: String -> Maybe (String, String)
   skipStringContents = skipStringContents' ""
     where
-      skipStringContents' acc "" = Nothing
+      skipStringContents' _ "" = Nothing
       skipStringContents' acc ('\\':'"':xs) = skipStringContents' (acc ++ "\\\"") xs
-      skipStringContents' acc ('"':xs) = Just ('"':(acc ++ "\""), xs)
+      skipStringContents' acc ('"':xs) = Just $! ('"':(acc ++ "\""), xs)
       skipStringContents' acc (x:xs) = skipStringContents' (acc ++ (x:"")) xs
 
   -- |Function going through the string to remove comments
@@ -64,8 +64,8 @@ module Shaun.Syntax.Comment (removeComments) where
           Nothing -> Nothing
         where
           rest = skipComment com s
-          newAcc CSingleLine acc = acc ++ "\n"
-          newAcc _ acc = acc
+          newAcc CSingleLine acc' = acc' ++ "\n"
+          newAcc _ acc' = acc'
 
       removeComments' acc "" = Just acc
       removeComments' acc ('/':'/':xs) = skip CSingleLine acc xs

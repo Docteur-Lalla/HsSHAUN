@@ -28,8 +28,8 @@
 import Shaun.Data.Type
 import Shaun.Data.Error
 import Shaun.Syntax.Parser
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Data.Attoparsec.ByteString
+import qualified Data.ByteString.Char8 as BS
 
 code = "obj: {" ++
   "int: 64 m\n" ++
@@ -37,8 +37,34 @@ code = "obj: {" ++
   "tree: { a: 5\nb: 1 rad }\n}\n\ni:42 life\n" ++
   "objb: { int: 2 }"
 
+int = "4.5e2 rad "
+str = "\"hehe\" "
+bool = "true"
+li = "[ \"abc\", 1, 3, 4, \"def\",  5, 6, 7, true, \"ghi\" ]"
+tr = "{ obj: 5 } "
+
 main =
   do
+    case shaunResult $ eitherResult $! (parse parseNumber (BS.pack int)) of
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing number : " ++ err)
+      Right val -> putStrLn ("Number : " ++ show val)
+    case shaunResult $ eitherResult $! (parse parseString (BS.pack str)) of
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing string : " ++ err)
+      Right val -> putStrLn ("String data : " ++ show val)
+    case shaunResult $ eitherResult $! (parse parseBoolean (BS.pack bool)) of
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing boolean : " ++ err)
+      Right val -> putStrLn ("Boolean : " ++ show val)
+    case shaunResult $ eitherResult $! (parse parseList (BS.pack li)) of
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing list : " ++ err)
+      Right val -> putStrLn ("List : " ++ show val)
+    case shaunResult $ eitherResult $! (parse parseTree (BS.pack tr)) of
+      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
+      Left (ParsingError err) -> putStrLn ("Parsing tree : " ++ err)
+      Right val -> putStrLn ("Tree : " ++ show val)
     case parseShaunCode code of
       Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
       Left (ParsingError err) -> putStrLn ("Parsing complete code : " ++ err)

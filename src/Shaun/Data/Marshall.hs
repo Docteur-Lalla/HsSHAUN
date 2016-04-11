@@ -30,7 +30,6 @@
 module Shaun.Data.Marshall where
   import Shaun.Data.Type
   import Shaun.Data.Error
-  import Control.Monad
 
   class Shaun a where
     -- |Encode the given data to a SHAUN object
@@ -81,10 +80,10 @@ module Shaun.Data.Marshall where
     encode (Left a) = tree [("left", encode a)]
     encode (Right b) = tree [("right", encode b)]
 
-    decode (TreeObj [either]) = case either of
+    decode (TreeObj [ei]) = case ei of
       ("left", a) -> case decode a of
         Right va -> Right (Left va)
-        Left err -> Left err
+        Left err -> Left err 
       ("right", b) -> case decode b of
         Right vb -> Right (Right vb)
         Left err -> Left err

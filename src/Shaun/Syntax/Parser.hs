@@ -1,175 +1,191 @@
 {-
   Copyright (c) 2016, Kévin Le Bon
+  
   All rights reserved.
+  
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
   
   * Redistributions of source code must retain the above copyright
   notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-  * Neither the name of Kévin Le Bon nor the names of its contributors
-  may be used to endorse or promote products derived from this software
-  without specific prior written permission.
   
-  THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
-  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the following
+  disclaimer in the documentation and/or other materials provided
+  with the distribution.
+  
+  * Neither the name of Kévin Le Bon nor the names of other
+  contributors may be used to endorse or promote products derived
+  from this software without specific prior written permission.
+  
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-module Shaun.Syntax.Parser (parseShaunFile, parseShaunCode) where
-  import qualified Shaun.Data.Type as ShaunType
+module Shaun.Syntax.Parser where
+  import Shaun.Data.Type
   import Shaun.Data.Error
   import Shaun.Syntax.Comment
-  import Text.Parsec hiding (spaces)
-  import Text.Parsec.String
+  import Data.Attoparsec.ByteString as Atto
+  import Data.Word
+  import qualified Data.ByteString.Char8 as BS
+  import qualified Data.ByteString.Internal as BS (c2w, w2c)
 
-  -- |Function scanning blank characters (newline is not allowed)
-  blank :: Parser Char
-  blank = oneOf " \t,"
+  spaces :: Parser ()
+  spaces = skipWhile space_predicate
+    where space_predicate = inClass " \t"
 
-  spaces :: Parser Char
-  spaces = blank <|> newline
+  blanks :: Parser Word8
+  blanks = choice [ char ' ', char '\t', char '\n' ]
 
-  -- |Parser for numbers
-  parseNumber :: Parser Double
+  char :: Char -> Parser Word8
+  char = word8 . BS.c2w
+
+  separator :: Parser ()
+  separator =
+    choice [hardNewline, withComma]
+    where
+      withComma =
+        do
+          newlines
+          comma
+          newlines
+      hardNewline =
+        do
+          spaces
+          char '\n'
+          newlines
+      
+      comma = skip (\w -> w == BS.c2w ',')
+      newlines = skipWhile (inClass " \t\n")
+
+  -- |Parser for numbers with or without unit
+  parseNumber :: Parser Object
   parseNumber =
     do
-      val <- parse
-      return (read val)
+      sign <- option (BS.c2w '0') (char '-')
+      val <- takeWhile1 (inClass "0-9")
+      dec <- option ".0" decimal
+      e <- option "e0" exponant
+      let str = (BS.w2c sign) : (BS.unpack val ++ dec ++ e)
+      u <- option Nothing unit
+      return $ NumberObj $! (read str, u)
     where
-      parse =
+      decimal =
         do
-          sign <- option '0' (char '-')
-          full <- many1 digit
-          dec <- option "" $ do
-            char '.'
-            val <- many1 digit
-            return ('.':val)
-          exp <- option "" $ do
-            e <- oneOf "Ee"
-            sign <- option '0' (char '+' <|> char '-')
-            val <- many1 digit
-            return (e:sign:val)
-          return (sign:(full ++ dec ++ exp))
-
-  -- |Parser for numbers with unit
-  parseNumberWithUnit :: Parser (Double, Maybe String)
-  parseNumberWithUnit =
-    do
-      num <- parseNumber
-      skipMany blank
-      unit <- try (optionMaybe (many1 letter))
-      return (num, unit)
-
+          char '.'
+          dec <- takeWhile1 (inClass "0-9")
+          return $! ('.' : BS.unpack dec)
+      exponant =
+        do
+          satisfy (inClass "eE")
+          s <- option (BS.c2w '0') (choice [char '+', char '-'])
+          e <- takeWhile1 (inClass "0-9")
+          let sign = if BS.w2c s == '+' then '0' else BS.w2c s
+          return $! ('e' : sign : BS.unpack e)
+      unit =
+        do
+          spaces
+          u <- takeWhile1 (inClass "a-zA-Z")
+          return $! (Just (BS.unpack u))
+  
   -- |Parser for booleans
-  parseBoolean :: Parser Bool
-  parseBoolean =
-    do
-      val <- (string "true" <|> string "false")
-      return $ case val of
-        "true" -> True
-        "false" -> False
+  parseBoolean :: Parser Object
+  parseBoolean = choice [parseTrue, parseFalse]
+    where
+      parseTrue = Atto.string (BS.pack "true") >> return (BoolObj True)
+      parseFalse = Atto.string (BS.pack "false") >> return (BoolObj False)
 
   -- |Parser for strings
-  parseString :: Parser String
+  parseString :: Parser Object
   parseString =
     do
       char '"'
-      val <- many (parseEscape <|> noneOf "\"")
+      str <- many' (choice [parseEscape, notWord8 (BS.c2w '"')])
       char '"'
-      return val
+      return $! (StringObj (map BS.w2c str))
     where
       parseEscape =
         do
           char '\\'
-          c <- oneOf "\\nrt\""
-          return $ case c of
+          c <- choice (map char "\\nrt\"")
+          return $! BS.c2w $ case BS.w2c c of
             '\\' -> '\\'
             'n' -> '\n'
             'r' -> '\r'
             't' -> '\t'
             '"' -> '"'
 
-  -- |Parser for list of values
-  parseList :: Parser [ShaunType.Object]
+  -- |Parser for a list of SHAUN objects
+  parseList :: Parser Object
   parseList =
     do
-      skipMany spaces
+      skipMany blanks
       char '['
-      skipMany spaces
-      elems <- listElems `sepEndBy` (many spaces)
-      skipMany spaces
+      skipMany blanks
+      elems <- parseShaunValue `sepBy` separator
+      skipMany blanks
       char ']'
-      return elems
-    where
-      listElems =
-        do
-          skipMany spaces
-          val <- parseShaunValue
-          skipMany spaces
-          return val
+      return $! (ListObj elems)
 
-  -- |Parser for attribute bindings like attribute_name: "value"
-  parseShaunAttribute :: Parser (String, ShaunType.Object)
-  parseShaunAttribute =
+  -- |Parser for a tree
+  parseTree :: Parser Object
+  parseTree =
     do
-      skipMany blank
-      name <- many (letter <|> digit <|> char '_')
-      skipMany blank
-      char ':'
-      skipMany blank
-      val <- parseShaunValue
-      skipMany blank
-      return (name, val)
-
-  -- |Parser for SHAUN trees
-  parseShaunTree :: Parser ShaunType.Object
-  parseShaunTree =
-    do
-      skipMany spaces
+      skipMany blanks
       char '{'
-      skipMany spaces
-      pairs <- parseShaunAttribute `sepEndBy` (many1 sep)
-      skipMany spaces
+      skipMany blanks
+      elems <- parseShaunPair `sepBy` separator
+      skipMany blanks
       char '}'
-      skipMany blank
-      return (ShaunType.tree pairs)
-    where sep = newline >> many spaces
+      return $! (TreeObj elems)
+    where
+      parseShaunPair =
+        do
+          ident <- takeWhile1 (inClass "a-zA-Z_0-9")
+          spaces
+          char ':'
+          spaces
+          val <- parseShaunValue
+          return $! (BS.unpack ident, val)
 
-  parseShaunList = fmap ShaunType.list parseList
-  parseShaunNumber = fmap number parseNumberWithUnit
-    where number (n, u) = ShaunType.number n u
-  parseShaunBoolean = fmap ShaunType.boolean parseBoolean
-  parseShaunString = fmap ShaunType.string parseString
+  -- |Parser for any SHAUN value
+  parseShaunValue :: Parser Object
+  parseShaunValue = choice
+    [
+      parseBoolean,
+      parseList,
+      parseTree,
+      parseNumber,
+      parseString
+    ]
 
-  -- |Parser for SHAUN values
-  parseShaunValue :: Parser ShaunType.Object
-  parseShaunValue = parseShaunNumber
-    <|> parseShaunBoolean
-    <|> parseShaunString
-    <|> parseShaunList
-    <|> parseShaunTree
+  -- |Transforms an Either String Object to a Either Error Object
+  shaunResult :: Either String Object -> Either Error Object
+  shaunResult (Left err) = Left (ParsingError err)
+  shaunResult (Right val) = Right val
 
   -- |Parser for a complete SHAUN code retrieved from a file
-  parseShaunFile :: String -> String -> Either Error ShaunType.Object
+  parseShaunFile :: String -> String -> Either Error Object
   parseShaunFile filename code =
     case clean_code of
-      Nothing -> Left (ParsingError "could not parse end of comment")
-      Just text -> case parse parseShaunTree filename ("{" ++ text ++ "}") of
-        Left err -> Left (ParsingError (show err))
+      Nothing -> Left (ParsingError (filename ++ "could not parse end of comment"))
+      Just text -> case shaunResult . eitherResult $! parsing_result text of
+        Left err -> Left err
         Right val -> Right val
     where
+      parsing_result text = parse parseTree $! (BS.pack ("{" ++ text ++ "}"))
       clean_code = removeComments code
 
   -- |Parser for a complete SHAUN code
-  parseShaunCode :: String -> Either Error ShaunType.Object
+  parseShaunCode :: String -> Either Error Object
   parseShaunCode = parseShaunFile ""

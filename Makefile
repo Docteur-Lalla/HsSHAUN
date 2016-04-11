@@ -22,7 +22,7 @@ $(BINDIR)/tests/io \
 $(BINDIR)/tests/show \
 
 HC=ghc
-HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)" -O2
+HFLAGS=-outputdir $(BINDIR) -i"$(BINDIR)" -O2 -Wall -fno-warn-unused-do-bind
 LDFLAGS=
 LIB=hsshaun
 
@@ -40,10 +40,10 @@ $(BINDIR)/Shaun/IO.o: $(BINDIR)/Shaun/Syntax/Parser.hi $(BINDIR)/Shaun/Data/Type
 
 # Tests
 $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
-	$(HC) -o $@ -c $< -i"$(BINDIR)" -outputdir $(BINDIR)/tests
+	$(HC) -o $@ -c $< -rtsopts -i"$(BINDIR)" -outputdir $(BINDIR)/tests
 
 $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
-	$(HC) -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/parser:\
 $(BINDIR)/Shaun/Data/Type.o \
@@ -51,7 +51,7 @@ $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/tests/parser.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -package attoparsec -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/io:\
 $(BINDIR)/Shaun/Data/Type.o \
@@ -60,7 +60,7 @@ $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/io.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -package attoparsec -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/show:\
 $(BINDIR)/Shaun/Data/Type.o \
@@ -69,4 +69,4 @@ $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/show.o
-	$(HC) -package parsec -o $@ -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -package attoparsec -o $@ -rtsopts -auto-all -caf-all -fforce-recomp -i"$(BINDIR)" $^ $(LDFLAGS)

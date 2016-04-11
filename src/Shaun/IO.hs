@@ -26,7 +26,6 @@
  -}
 
 module Shaun.IO where
-  import System.IO
   import Shaun.Data.Type
   import Shaun.Data.Error
   import Shaun.Syntax.Parser

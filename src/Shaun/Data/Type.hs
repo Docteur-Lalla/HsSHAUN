@@ -27,11 +27,11 @@
 
 module Shaun.Data.Type where
   -- |SHAUN data type
-  data Object = NumberObj (Double, Maybe String)
-    | BoolObj Bool
-    | StringObj String
-    | ListObj [Object]
-    | TreeObj [(String, Object)]
+  data Object = NumberObj !(Double, Maybe String)
+    | BoolObj !Bool
+    | StringObj !String
+    | ListObj ![Object]
+    | TreeObj ![(String, Object)]
 
   -- |helper function to create SHAUN numbers
   number :: Double -> Maybe String -> Object
@@ -68,7 +68,7 @@ module Shaun.Data.Type where
   hasAttribute :: String -> Object -> Bool
   hasAttribute _ (TreeObj []) = False
   hasAttribute child (TreeObj ((name, _):xs))
-    | (child == name) = True
+    | child == name = True
     | otherwise = hasAttribute child (TreeObj xs)
   hasAttribute _ _ = False
 
@@ -76,14 +76,14 @@ module Shaun.Data.Type where
   getAttribute :: String -> Object -> Maybe Object
   getAttribute _ (TreeObj []) = Nothing
   getAttribute child (TreeObj ((name, obj):xs))
-    | (child == name) = Just obj
+    | child == name = Just obj
     | otherwise = getAttribute child (TreeObj xs)
   getAttribute _ _ = Nothing
 
   -- |Function returning the nth element of a list object
   getListElem :: Int -> Object -> Maybe Object
   getListElem _ (ListObj []) = Nothing
-  getListElem n (ListObj l@(x:xs))
+  getListElem n (ListObj l@(_:_))
     | length l <= n = Nothing
     | otherwise = Just (l !! n)
   getListElem _ _ = Nothing
@@ -95,17 +95,17 @@ module Shaun.Data.Type where
     show (BoolObj True) = "true"
     show (BoolObj False) = "false"
     show (ListObj []) = "[]"
-    show (ListObj l@(x:xs)) = case any pred l of
+    show (ListObj l@(x:xs)) = case any predicate l of
       False -> "[" ++ foldl (\a b -> a ++ ", " ++ show b) (show x) xs ++ "]"
-      True -> "[" ++ indent (foldl (\a b -> a ++ "\n" ++ b) "" lin) ++ "]"
+      True -> "[" ++ indent (foldr (\a b -> a ++ "\n" ++ b) "" lin) ++ "]"
         where
-          sl = foldl (\a b -> a ++ "\n" ++ b) (show x) (map show xs)
+          sl = foldr (\a b -> a ++ "\n" ++ b) (show x) (map show xs)
           lin = lines sl
       where
-        pred (ListObj _) = True
-        pred (TreeObj _) = True
-        pred (StringObj _) = True
-        pred _ = False
+        predicate (ListObj _) = True
+        predicate (TreeObj _) = True
+        predicate (StringObj _) = True
+        predicate _ = False
 
         indent s = unlines (map (\line -> "  " ++ line) (lines s))
     show (TreeObj t) = "{" ++ indent (foldl show_tree "" t) ++ "}"
