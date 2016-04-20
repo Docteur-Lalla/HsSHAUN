@@ -41,7 +41,8 @@ main =
 
     ret <- parseShaunFromFile filename
     case ret of
-      Left (ParsingError err) -> putStrLn err
-      Left (TypeError exp got) -> putStrLn
-        ("Expected type " ++ show exp ++ " got " ++ show got)
-      Right val -> putStrLn (show val)
+      Left err -> putStrLn (show err)
+      Right val ->
+        do
+          putStrLn (show val)
+          writeShaunToFile (args !! 0) val

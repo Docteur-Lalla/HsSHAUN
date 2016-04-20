@@ -34,158 +34,127 @@
 module Shaun.Syntax.Parser where
   import Shaun.Data.Type
   import Shaun.Data.Error
-  import Shaun.Syntax.Comment
-  import Data.Attoparsec.ByteString as Atto
-  import Data.Word
-  import qualified Data.ByteString.Char8 as BS
-  import qualified Data.ByteString.Internal as BS (c2w, w2c)
+  import Shaun.Syntax.Lexer
 
-  spaces :: Parser ()
-  spaces = skipWhile space_predicate
-    where space_predicate = inClass " \t"
+  type Parser a = [Token] -> Either Error ([Token], a)
 
-  blanks :: Parser Word8
-  blanks = choice [ char ' ', char '\t', char '\n' ]
-
-  char :: Char -> Parser Word8
-  char = word8 . BS.c2w
-
-  separator :: Parser ()
-  separator =
-    choice [hardNewline, withComma]
-    where
-      withComma =
-        do
-          newlines
-          comma
-          newlines
-      hardNewline =
-        do
-          spaces
-          char '\n'
-          newlines
-      
-      comma = skip (\w -> w == BS.c2w ',')
-      newlines = skipWhile (inClass " \t\n")
-
-  -- |Parser for numbers with or without unit
+  -- |Looks for a number at the head of the stream
   parseNumber :: Parser Object
-  parseNumber =
-    do
-      sign <- option (BS.c2w '0') (char '-')
-      val <- takeWhile1 (inClass "0-9")
-      dec <- option ".0" decimal
-      e <- option "e0" exponant
-      let str = (BS.w2c sign) : (BS.unpack val ++ dec ++ e)
-      u <- option Nothing unit
-      return $ NumberObj $! (read str, u)
-    where
-      decimal =
-        do
-          char '.'
-          dec <- takeWhile1 (inClass "0-9")
-          return $! ('.' : BS.unpack dec)
-      exponant =
-        do
-          satisfy (inClass "eE")
-          s <- option (BS.c2w '0') (choice [char '+', char '-'])
-          e <- takeWhile1 (inClass "0-9")
-          let sign = if BS.w2c s == '+' then '0' else BS.w2c s
-          return $! ('e' : sign : BS.unpack e)
-      unit =
-        do
-          spaces
-          u <- takeWhile1 (inClass "a-zA-Z")
-          return $! (Just (BS.unpack u))
-  
-  -- |Parser for booleans
+  parseNumber [] = Left (ParsingError NumberToken Empty)
+  parseNumber (Num val:Id unit:xs) = Right $! (xs, number val (Just unit))
+  parseNumber (Num val:xs) = Right $! (xs, number val Nothing)
+  parseNumber (got:_) = Left (ParsingError NumberToken (tokenType got))
+
+  -- |Looks for a boolean at the head of the stream
   parseBoolean :: Parser Object
-  parseBoolean = choice [parseTrue, parseFalse]
-    where
-      parseTrue = Atto.string (BS.pack "true") >> return (BoolObj True)
-      parseFalse = Atto.string (BS.pack "false") >> return (BoolObj False)
+  parseBoolean [] = Left (ParsingError BoolToken Empty)
+  parseBoolean (Boolean val:xs) = Right $! (xs, boolean val)
+  parseBoolean (got:_) = Left (ParsingError BoolToken (tokenType got))
 
-  -- |Parser for strings
+  -- |Looks for a string at the head of the stream
   parseString :: Parser Object
-  parseString =
-    do
-      char '"'
-      str <- many' (choice [parseEscape, notWord8 (BS.c2w '"')])
-      char '"'
-      return $! (StringObj (map BS.w2c str))
-    where
-      parseEscape =
-        do
-          char '\\'
-          c <- choice (map char "\\nrt\"")
-          return $! BS.c2w $ case BS.w2c c of
-            '\\' -> '\\'
-            'n' -> '\n'
-            'r' -> '\r'
-            't' -> '\t'
-            '"' -> '"'
+  parseString [] = Left (ParsingError StringToken Empty)
+  parseString (Str val:xs) = Right $! (xs, string val)
+  parseString (got:_) = Left (ParsingError StringToken (tokenType got))
 
-  -- |Parser for a list of SHAUN objects
+  -- |Parses many occurences of the given parser
+  many :: Parser a -> Parser [a]
+  many = many' []
+    where
+      many' acc _ [] = Right $! ([], reverse acc)
+      many' acc p s =
+        case p s of
+          Left _ -> Right $! (s, reverse acc)
+          Right (ss, val) -> many' (val:acc) p ss
+
+  -- |Parses many occurences of the second parser, separated by the first one
+  -- No occurence is actually needed
+  sepBy :: Parser a -> Parser b -> Parser [b]
+  sepBy sep p s =
+    case p s of
+      Left _ -> Right $! (s, [])
+      Right (ss, val) -> sepBy' [val] ss
+    
+    where
+      sepBy' acc [] = Right $! ([], reverse acc)
+      sepBy' acc s' =
+        case sep s' of
+          Left _ -> Right $! (s', reverse acc)
+          Right (ss', _) ->
+            case p ss' of
+              Left _ -> Right $! (s', reverse acc)
+              Right (sss', val') -> sepBy' (val':acc) sss'
+
+  -- |Tries each parser and returns the result of the first successing
+  alt :: [Parser a] -> Parser a
+  alt ps s = alt' [] ps s
+    where
+      alt' errs [] _ = Left (AlternativeErrors errs)
+      alt' errs (p:ps') s' =
+        case p s' of
+          Left e -> alt' (e:errs) ps' s
+          r@(Right _) -> r
+
+  or :: Parser a -> Parser a -> Parser a
+  or a b = alt [a, b]
+
+  -- |Parses a separator (newline or comma)
+  parseSeparator :: Parser ()
+  parseSeparator [] = Left (ParsingError SeparatorToken Empty)
+  parseSeparator (Separator:xs) = Right $! (xs, ())
+  parseSeparator (got:_) = Left (ParsingError SeparatorToken (tokenType got))
+
+  -- |Parses any SHAUN value
+  parseValue :: Parser Object
+  parseValue = alt [parseNumber, parseString, parseBoolean, parseList, parseTree]
+
+  -- |Parses a list of values
   parseList :: Parser Object
-  parseList =
+  parseList [] = Left (ParsingError (SymbolToken "[") Empty)
+  parseList (Symbol "[":xs) =
     do
-      skipMany blanks
-      char '['
-      skipMany blanks
-      elems <- parseShaunValue `sepBy` separator
-      skipMany blanks
-      char ']'
-      return $! (ListObj elems)
+      (s', _) <- many parseSeparator xs
+      (ss', vals) <- sepBy (many parseSeparator) parseValue s'
+      (sss', _) <- many parseSeparator ss'
+      case sss' of
+        [] -> Left (ParsingError (SymbolToken "]") Empty)
+        (Symbol "]":ssss') -> Right $! (ssss', ListObj vals)
+        (got:_) -> Left (ParsingError (SymbolToken "]") (tokenType got))
+  parseList (got:_) = Left (ParsingError (SymbolToken "[") (tokenType got))
 
-  -- |Parser for a tree
+  parsePair :: Parser (String, Object)
+  parsePair [] = Left (ParsingError IdentifierToken Empty)
+  parsePair (Id i:Symbol ":":xs) =
+    do
+      (s', val) <- parseValue xs
+      Right $! (s', (i, val))
+  parsePair (Id _:got:_) = Left (ParsingError (SymbolToken ":") (tokenType got))
+  parsePair (got:_) = Left (ParsingError IdentifierToken (tokenType got))
+
   parseTree :: Parser Object
-  parseTree =
+  parseTree [] = Left (ParsingError (SymbolToken "{") Empty)
+  parseTree s =
     do
-      skipMany blanks
-      char '{'
-      skipMany blanks
-      elems <- parseShaunPair `sepBy` separator
-      skipMany blanks
-      char '}'
-      return $! (TreeObj elems)
-    where
-      parseShaunPair =
-        do
-          ident <- takeWhile1 (inClass "a-zA-Z_0-9")
-          spaces
-          char ':'
-          spaces
-          val <- parseShaunValue
-          return $! (BS.unpack ident, val)
-
-  -- |Parser for any SHAUN value
-  parseShaunValue :: Parser Object
-  parseShaunValue = choice
-    [
-      parseBoolean,
-      parseList,
-      parseTree,
-      parseNumber,
-      parseString
-    ]
-
-  -- |Transforms an Either String Object to a Either Error Object
-  shaunResult :: Either String Object -> Either Error Object
-  shaunResult (Left err) = Left (ParsingError err)
-  shaunResult (Right val) = Right val
-
-  -- |Parser for a complete SHAUN code retrieved from a file
-  parseShaunFile :: String -> String -> Either Error Object
-  parseShaunFile filename code =
-    case clean_code of
-      Nothing -> Left (ParsingError (filename ++ "could not parse end of comment"))
-      Just text -> case shaunResult . eitherResult $! parsing_result text of
-        Left err -> Left err
-        Right val -> Right val
-    where
-      parsing_result text = parse parseTree $! (BS.pack ("{" ++ text ++ "}"))
-      clean_code = removeComments code
-
-  -- |Parser for a complete SHAUN code
-  parseShaunCode :: String -> Either Error Object
-  parseShaunCode = parseShaunFile ""
+      (s', _) <- many parseSeparator s
+      case s' of
+        [] -> Left (ParsingError (SymbolToken "{") Empty)
+        (Symbol "{":ss') ->
+          do
+            (sss', _) <- many parseSeparator ss'
+            (ssss', pairs) <- sepBy (many parseSeparator) parsePair sss'
+            (sssss', _) <- many parseSeparator ssss'
+            case sssss' of
+              [] -> Left (ParsingError (SymbolToken "}") Empty)
+              (Symbol "}":ssssss') -> Right $! (ssssss', TreeObj pairs)
+              (got:_) ->  Left (ParsingError (SymbolToken "}") (tokenType got))
+        (got:_) -> Left (ParsingError (SymbolToken "{") (tokenType got))
+  
+  parseShaunFile :: String -> Parser Object
+  parseShaunFile _ stream =
+    do
+      (s', _) <- many parseSeparator stream
+      (ss', obj) <- parseTree (Symbol "{":s'++[Symbol "}"])
+      (sss', _) <- many parseSeparator ss'
+      case sss' of
+        [] -> Right $! ([], obj)
+        (got:_) -> Left (ParsingError Empty (tokenType got))

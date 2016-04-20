@@ -27,9 +27,10 @@
 
 import Shaun.Data.Type
 import Shaun.Data.Error
+import Shaun.Syntax.Lexer
 import Shaun.Syntax.Parser
-import Data.Attoparsec.ByteString
-import qualified Data.ByteString.Char8 as BS
+
+import System.Environment
 
 code = "obj: {" ++
   "int: 64 m\n" ++
@@ -40,32 +41,35 @@ code = "obj: {" ++
 int = "4.5e2 rad "
 str = "\"hehe\" "
 bool = "true"
-li = "[ \"abc\", 1, 3, 4, \"def\",  5, 6, 7, true, \"ghi\" ]"
+simple_li = "[ 1, 2, 3, 4, 5 ]"
+li = "[ \"abc\", 1, 3, 4 km, \"def\",  5, 6, 7, true, \"ghi\" ]"
 tr = "{ obj: 5 } "
 
 main =
   do
-    case shaunResult $ eitherResult $! (parse parseNumber (BS.pack int)) of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing number : " ++ err)
-      Right val -> putStrLn ("Number : " ++ show val)
-    case shaunResult $ eitherResult $! (parse parseString (BS.pack str)) of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing string : " ++ err)
-      Right val -> putStrLn ("String data : " ++ show val)
-    case shaunResult $ eitherResult $! (parse parseBoolean (BS.pack bool)) of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing boolean : " ++ err)
-      Right val -> putStrLn ("Boolean : " ++ show val)
-    case shaunResult $ eitherResult $! (parse parseList (BS.pack li)) of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing list : " ++ err)
-      Right val -> putStrLn ("List : " ++ show val)
-    case shaunResult $ eitherResult $! (parse parseTree (BS.pack tr)) of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing tree : " ++ err)
-      Right val -> putStrLn ("Tree : " ++ show val)
-    case parseShaunCode code of
-      Left (TypeError exp got) -> putStrLn ("expected type " ++ show exp ++ " got " ++ show got)
-      Left (ParsingError err) -> putStrLn ("Parsing complete code : " ++ err)
-      Right val -> putStrLn ("Complete data : " ++ show val)
+    case makeLexer li of
+      Left e -> putStrLn e
+      Right (_, s) ->
+        case parseValue s of
+          Left e -> putStrLn (show e)
+          Right (_, v) -> putStrLn (show v)
+    case makeLexer code of
+      Left e -> putStrLn e
+      Right (_, s) ->
+        case parseShaunFile "" s of
+          Left e -> putStrLn (show e)
+          Right (_, v) -> putStrLn (show v)
+    args <- getArgs
+    case length args of
+      1 ->
+        do
+          let filename = args !! 0
+          contents <- readFile filename
+          let lexer = makeLexer contents
+          case lexer of
+            Left e -> putStrLn e
+            Right (_, stream) ->
+              case parseShaunFile filename stream of
+                Left e -> putStrLn (show e)
+                Right (_, v) -> putStrLn (show v)
+      _ -> return ()

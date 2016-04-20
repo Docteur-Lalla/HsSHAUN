@@ -99,8 +99,7 @@ module Shaun.Data.Type where
       False -> "[" ++ foldl (\a b -> a ++ ", " ++ show b) (show x) xs ++ "]"
       True -> "[" ++ indent (foldr (\a b -> a ++ "\n" ++ b) "" lin) ++ "]"
         where
-          sl = foldr (\a b -> a ++ "\n" ++ b) (show x) (map show xs)
-          lin = lines sl
+          lin = map show l
       where
         predicate (ListObj _) = True
         predicate (TreeObj _) = True

@@ -28,6 +28,7 @@
 module Shaun.IO where
   import Shaun.Data.Type
   import Shaun.Data.Error
+  import Shaun.Syntax.Lexer
   import Shaun.Syntax.Parser
 
   -- |Reads the specified file and parse SHAUN code
@@ -36,7 +37,14 @@ module Shaun.IO where
   parseShaunFromFile filename =
     do
       contents <- readFile filename
-      return (parseShaunFile filename contents)
+      putStrLn contents
+      let lexer = makeLexer contents
+      case lexer of
+        Left e -> return (Left (LexicalError e))
+        Right (_, stream) ->
+          case parseShaunFile filename stream of
+            Left e -> return (Left e)
+            Right (_, v) -> return (Right v)
 
   -- |Writes SHAUN code of the given object into the specified file
   writeShaunToFile :: String -> Object -> IO ()

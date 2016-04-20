@@ -5,18 +5,21 @@ $(BINDIR)/Shaun/Data/Type.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Data/Marshall.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 
 TESTDIR=tests
 TESTOBJS=\
 $(BINDIR)/tests/comment.o \
+$(BINDIR)/tests/lexer.o \
 $(BINDIR)/tests/parser.o \
 $(BINDIR)/tests/io.o \
 $(BINDIR)/tests/show.o \
 
 TESTS=\
 $(BINDIR)/tests/comment \
+$(BINDIR)/tests/lexer \
 $(BINDIR)/tests/parser \
 $(BINDIR)/tests/io \
 $(BINDIR)/tests/show \
@@ -45,28 +48,34 @@ $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
 $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
 	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
+$(BINDIR)/tests/lexer: $(BINDIR)/tests/lexer.o $(BINDIR)/Shaun/Syntax/Lexer.o
+	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
+
 $(BINDIR)/tests/parser:\
 $(BINDIR)/Shaun/Data/Type.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/tests/parser.o
-	$(HC) -package attoparsec -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/io:\
 $(BINDIR)/Shaun/Data/Type.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/io.o
-	$(HC) -package attoparsec -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/show:\
 $(BINDIR)/Shaun/Data/Type.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 $(BINDIR)/tests/show.o
-	$(HC) -package attoparsec -o $@ -rtsopts -auto-all -caf-all -fforce-recomp -i"$(BINDIR)" $^ $(LDFLAGS)
+	$(HC) -o $@ -rtsopts -auto-all -caf-all -fforce-recomp -i"$(BINDIR)" $^ $(LDFLAGS)

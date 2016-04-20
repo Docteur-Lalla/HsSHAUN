@@ -41,15 +41,11 @@ main =
   do
     args <- getArgs
     let filename = args !! 0
-    let output = args !! 1
 
     res <- parseShaunFromFile filename
     case res of
-      Left (ParsingError err) -> putStrLn err
-      Left (TypeError exp got) -> putStrLn
-        ("Expected type " ++ show exp ++ " got " ++ show got)
+      Left err -> putStrLn (show err)
       Right v ->
         do
           putStrLn "Parsing finished.\nPreparing to show."
           putStrLn (show v)
-          writeShaunToFile output v
