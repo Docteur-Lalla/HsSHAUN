@@ -2,10 +2,10 @@ BINDIR=bin
 SRCDIR=src
 OBJS=\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Data/Marshall.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
-$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 
@@ -36,7 +36,7 @@ $(BINDIR)/%.o: $(SRCDIR)/%.hs
 
 # Dependencies
 $(BINDIR)/%.hi: $(BINDIR)/%.o
-$(BINDIR)/Shaun/Data/Error.o: $(BINDIR)/Shaun/Data/Type.hi
+$(BINDIR)/Shaun/Data/Error.o: $(BINDIR)/Shaun/Data/Type.hi $(BINDIR)/Shaun/Syntax/Lexer.hi
 $(BINDIR)/Shaun/Data/Marshall.o: $(BINDIR)/Shaun/Data/Error.hi $(BINDIR)/Shaun/Data/Type.hi
 $(BINDIR)/Shaun/Syntax/Parser.o: $(BINDIR)/Shaun/Syntax/Comment.hi $(BINDIR)/Shaun/Data/Type.hi
 $(BINDIR)/Shaun/IO.o: $(BINDIR)/Shaun/Syntax/Parser.hi $(BINDIR)/Shaun/Data/Type.hi

@@ -45,4 +45,4 @@ main =
       Right val ->
         do
           putStrLn (show val)
-          writeShaunToFile (args !! 0) val
+          writeShaunToFile (args !! 1) val
