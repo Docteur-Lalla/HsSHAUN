@@ -31,58 +31,20 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
-import Shaun.Syntax.Token
-import Shaun.Syntax.Lexer
+module Shaun.Syntax.Token where
+  -- |Token type
+  data Token =
+      Num Double
+    | Str String
+    | Boolean Bool
+    | Id String
+    | Symbol String
+    | Separator
 
-number :: IO ()
-number =
-  do
-    case readNumber "123" of
-      Left s -> putStrLn s
-      Right (_, Num i) -> putStrLn $ show i
-    case readNumber "-123.23" of
-      Left s -> putStrLn s
-      Right (_, Num i) -> putStrLn $ show i
-    case readNumber "123e3" of
-      Left s -> putStrLn s
-      Right (_, Num i) -> putStrLn $ show i
-    case readNumber "123.5e-4" of
-      Left s -> putStrLn s
-      Right (_, Num i) -> putStrLn $ show i
-
-string :: IO ()
-string =
-  do
-    case readString "\"Das war ein Befehl\"" of
-      Left s -> putStrLn s
-      Right (_, Str s) -> putStrLn ('"':s ++ "\"")
-
-identifier :: IO ()
-identifier =
-  do
-    case readIdentifier "_ab12cd" of
-      Left s -> putStrLn s
-      Right (_, Id i) -> putStrLn i
-    case readIdentifier "ab_12cd" of
-      Left s -> putStrLn s
-      Right (_, Id i) -> putStrLn i
-    case readIdentifier "Ab12cd_" of
-      Left s -> putStrLn s
-      Right (_, Id i) -> putStrLn i
-
-completeCode =
-  "obj: {\n" ++
-  "  i: 23.5e-3 rad\n" ++
-  "  b: true\n" ++
-  "}"
-
-main =
-  do
-    number
-    string
-    identifier
-    case makeLexer completeCode of
-      Left s -> putStrLn s
-      Right ("", v) -> putStrLn $! foldr f "" v
-        where
-          f a b = show a ++ b
+  instance Show Token where
+    show (Num d) = show d
+    show (Str s) = s
+    show (Boolean b) = show b
+    show (Id i) = i
+    show (Symbol s) = s
+    show Separator = ","

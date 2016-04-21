@@ -33,7 +33,7 @@
 
 module Shaun.Data.Error where
   import Shaun.Data.Type
-  import Shaun.Syntax.Lexer
+  import Shaun.Syntax.Token
 
   -- |Data representing a token's type
   data TokenType =

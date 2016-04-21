@@ -27,6 +27,7 @@
 
 import Shaun.Data.Type
 import Shaun.Data.Error
+import Shaun.Syntax.Token
 import Shaun.Syntax.Lexer
 import Shaun.Syntax.Parser
 

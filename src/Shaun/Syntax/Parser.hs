@@ -34,7 +34,7 @@
 module Shaun.Syntax.Parser where
   import Shaun.Data.Type
   import Shaun.Data.Error
-  import Shaun.Syntax.Lexer
+  import Shaun.Syntax.Token
 
   type Parser a = [Token] -> Either Error ([Token], a)
 

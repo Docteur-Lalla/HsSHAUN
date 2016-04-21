@@ -56,7 +56,7 @@ module Shaun.Data.Marshall where
       where
         tmp = map decode l
         format acc [] = Right acc
-        format acc (Left err:xs) = Left err
+        format _ (Left err:_) = Left err
         format acc (Right x:xs) = format (acc ++ [x]) xs
     decode v = Left (TypeError ListType (typeOf v))
 

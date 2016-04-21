@@ -37,26 +37,9 @@ module Shaun.Syntax.Lexer (
   readString,
   readIdentifier,
   makeLexer,
-  Lexer,
-  Token (Num, Str, Boolean, Id, Symbol, Separator)) where
+  Lexer) where
   import Data.Char
-
-  -- |Token type
-  data Token =
-      Num Double
-    | Str String
-    | Boolean Bool
-    | Id String
-    | Symbol String
-    | Separator
-
-  instance Show Token where
-    show (Num d) = show d
-    show (Str s) = s
-    show (Boolean b) = show b
-    show (Id i) = i
-    show (Symbol s) = s
-    show Separator = ","
+  import Shaun.Syntax.Token
 
   -- |Lexer type
   type Lexer a = Either String (String, a)

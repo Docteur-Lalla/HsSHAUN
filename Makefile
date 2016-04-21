@@ -2,10 +2,11 @@ BINDIR=bin
 SRCDIR=src
 OBJS=\
 $(BINDIR)/Shaun/Data/Type.o \
-$(BINDIR)/Shaun/Syntax/Lexer.o \
+$(BINDIR)/Shaun/Syntax/Token.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Data/Marshall.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
+$(BINDIR)/Shaun/Syntax/Lexer.o \
 $(BINDIR)/Shaun/Syntax/Parser.o \
 $(BINDIR)/Shaun/IO.o \
 
@@ -36,9 +37,10 @@ $(BINDIR)/%.o: $(SRCDIR)/%.hs
 
 # Dependencies
 $(BINDIR)/%.hi: $(BINDIR)/%.o
-$(BINDIR)/Shaun/Data/Error.o: $(BINDIR)/Shaun/Data/Type.hi $(BINDIR)/Shaun/Syntax/Lexer.hi
+$(BINDIR)/Shaun/Data/Error.o: $(BINDIR)/Shaun/Data/Type.hi $(BINDIR)/Shaun/Syntax/Token.hi
+$(BINDIR)/Shaun/Data/Lexer.o: $(BINDIR)/Shaun/Syntax/Token.hi
 $(BINDIR)/Shaun/Data/Marshall.o: $(BINDIR)/Shaun/Data/Error.hi $(BINDIR)/Shaun/Data/Type.hi
-$(BINDIR)/Shaun/Syntax/Parser.o: $(BINDIR)/Shaun/Syntax/Comment.hi $(BINDIR)/Shaun/Data/Type.hi
+$(BINDIR)/Shaun/Syntax/Parser.o: $(BINDIR)/Shaun/Syntax/Comment.hi $(BINDIR)/Shaun/Data/Type.hi $(BINDIR)/Shaun/Syntax/Token.hi
 $(BINDIR)/Shaun/IO.o: $(BINDIR)/Shaun/Syntax/Parser.hi $(BINDIR)/Shaun/Data/Type.hi
 
 # Tests
@@ -48,11 +50,12 @@ $(BINDIR)/tests/%.o: $(TESTDIR)/%.hs
 $(BINDIR)/tests/comment: $(BINDIR)/tests/comment.o $(BINDIR)/Shaun/Syntax/Comment.o
 	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
-$(BINDIR)/tests/lexer: $(BINDIR)/tests/lexer.o $(BINDIR)/Shaun/Syntax/Lexer.o
+$(BINDIR)/tests/lexer: $(BINDIR)/tests/lexer.o $(BINDIR)/Shaun/Syntax/Lexer.o $(BINDIR)/Shaun/Syntax/Token.o
 	$(HC) -o $@ -rtsopts -i"$(BINDIR)" $^ $(LDFLAGS)
 
 $(BINDIR)/tests/parser:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Token.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Lexer.o \
@@ -62,6 +65,7 @@ $(BINDIR)/tests/parser.o
 
 $(BINDIR)/tests/io:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Token.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Lexer.o \
@@ -72,6 +76,7 @@ $(BINDIR)/tests/io.o
 
 $(BINDIR)/tests/show:\
 $(BINDIR)/Shaun/Data/Type.o \
+$(BINDIR)/Shaun/Syntax/Token.o \
 $(BINDIR)/Shaun/Data/Error.o \
 $(BINDIR)/Shaun/Syntax/Comment.o \
 $(BINDIR)/Shaun/Syntax/Lexer.o \
