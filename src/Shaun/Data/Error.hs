@@ -74,6 +74,8 @@ module Shaun.Data.Error where
     | AlternativeErrors [Error]
     -- |Type error, takes the expected type and the type of the faulty value
     | TypeError Type Type
+    -- |Attribute not found in the tree object
+    | AttributeNotFound String
 
   instance Show Error where
     show (LexicalError e) = e
@@ -82,3 +84,4 @@ module Shaun.Data.Error where
       where
         f a b = show a ++ " or\n" ++ b
     show (TypeError ex got) = "expected type " ++ show ex ++ " got " ++ show got
+    show (AttributeNotFound name) = "attribute '" ++ name ++ "' not found in tree"

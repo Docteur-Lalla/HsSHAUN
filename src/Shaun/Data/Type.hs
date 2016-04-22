@@ -68,19 +68,19 @@ module Shaun.Data.Type where
   getUnit _ = Nothing
 
   -- |Predicate checking if a SHAUN tree has the given child object
-  hasAttribute :: String -> Object -> Bool
-  hasAttribute _ (TreeObj []) = False
-  hasAttribute child (TreeObj ((name, _):xs))
+  hasAttribute :: Object -> String -> Bool
+  hasAttribute (TreeObj []) _ = False
+  hasAttribute (TreeObj ((name, _):xs)) child
     | child == name = True
-    | otherwise = hasAttribute child (TreeObj xs)
+    | otherwise = hasAttribute (TreeObj xs) child
   hasAttribute _ _ = False
 
   -- |Function returning the specified child object of a tree object
-  getAttribute :: String -> Object -> Maybe Object
-  getAttribute _ (TreeObj []) = Nothing
-  getAttribute child (TreeObj ((name, obj):xs))
+  getAttribute :: Object -> String -> Maybe Object
+  getAttribute (TreeObj []) _ = Nothing
+  getAttribute (TreeObj ((name, obj):xs)) child
     | child == name = Just obj
-    | otherwise = getAttribute child (TreeObj xs)
+    | otherwise = getAttribute (TreeObj xs) child
   getAttribute _ _ = Nothing
 
   -- |Function returning the nth element of a list object

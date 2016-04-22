@@ -10,7 +10,7 @@ name:                HsSHAUN
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.4.0.2
+version:             0.4.1.0
 
 -- A short (one-line) description of the package.
 synopsis:            Haskell implementation of the data-notation language SHAUN
@@ -48,7 +48,7 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Shaun.IO, Shaun.Data.Type, Shaun.Syntax.Token, Shaun.Data.Error, Shaun.Data.Marshall, Shaun.Syntax.Comment, Shaun.Syntax.Lexer, Shaun.Syntax.Parser
+  exposed-modules:     Shaun.IO, Shaun.Data.Type, Shaun.Syntax.Token, Shaun.Data.Error, Shaun.Data.Marshall, Shaun.Syntax.Comment, Shaun.Syntax.Lexer, Shaun.Syntax.Parser, Shaun.Data.Sweeper
   
   -- Modules included in this library but not exported.
   -- other-modules:       
