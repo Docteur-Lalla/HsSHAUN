@@ -31,6 +31,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+-- |Module implementing the lexical analysis of the SHAUN code provided
 module Shaun.Syntax.Lexer (
   readBoolean,
   readNumber,

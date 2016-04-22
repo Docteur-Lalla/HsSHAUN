@@ -25,6 +25,9 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+-- |This module provides the Object type (used to encapsulated a SHAUN value) and
+-- a few helper functions to manipulate them, as well as a Type data type
+-- for type checking.
 module Shaun.Data.Type where
   -- |SHAUN data type
   data Object = NumberObj !(Double, Maybe String)
@@ -128,6 +131,7 @@ module Shaun.Data.Type where
     show ListType = "list"
     show ObjectType = "object"
 
+  -- |get the type of the given object
   typeOf :: Object -> Type
   typeOf (NumberObj _) = NumberType
   typeOf (StringObj _) = StringType

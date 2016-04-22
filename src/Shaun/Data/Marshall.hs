@@ -27,10 +27,12 @@
 
 {-# LANGUAGE FlexibleInstances #-}
 
+-- |Module implementing basic marshalling functionalities for Haskell values
 module Shaun.Data.Marshall where
   import Shaun.Data.Type
   import Shaun.Data.Error
 
+  -- |Typeclass of Haskell types that can be marshalled into SHAUN values
   class Shaun a where
     -- |Encode the given data to a SHAUN object
     encode :: a -> Object

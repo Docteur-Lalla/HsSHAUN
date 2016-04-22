@@ -25,6 +25,8 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+-- |This module implements comment removal from SHAUN code before
+-- the lexical analysis.
 module Shaun.Syntax.Comment (removeComments) where
   -- |Type of SHAUN comment
   data Comment = CSingleLine | CMultiLine | Parenthese

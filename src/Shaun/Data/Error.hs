@@ -31,6 +31,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+-- |Module providing useful types for error handling
 module Shaun.Data.Error where
   import Shaun.Data.Type
   import Shaun.Syntax.Token
@@ -54,6 +55,7 @@ module Shaun.Data.Error where
     show IdentifierToken = "an identifier"
     show Empty = "end of stream"
 
+  -- |Retrieve the type of the given SHAUN value
   tokenType :: Token -> TokenType
   tokenType (Num _) = NumberToken
   tokenType (Str _) = StringToken

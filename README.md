@@ -1,7 +1,7 @@
 HsSHAUN
 =======
 
-HsSHAUN is a Haskell implementation of the SHAUN (Shaun HAtes Ugly Notations) object notation language created by Arthur Blanleuil and Pierre Le Luron. This language is a improvement of the JSON language featuring :
+HsSHAUN is a Haskell implementation of the SHAUN (Shaun HAtes Ugly Notations) object notation language created by [Arthur Blanleuil](https://github.com/Shumush) and [Pierre Le Luron](https://github.com/PLeLuron). This language is a improvement of the JSON language featuring :
 
 * Multiple comment delimiters : parentheses and C-style comments (simple and multiline)
 * Unit for numbers (distance, angle, time, etc...)

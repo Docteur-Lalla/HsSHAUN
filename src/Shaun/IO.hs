@@ -25,9 +25,11 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  -}
 
+-- |Module for any IO operations involving SHAUN code (reading, marshalling, writing).
 module Shaun.IO where
   import Shaun.Data.Type
   import Shaun.Data.Error
+  import Shaun.Syntax.Comment
   import Shaun.Syntax.Lexer
   import Shaun.Syntax.Parser
 
@@ -37,14 +39,17 @@ module Shaun.IO where
   parseShaunFromFile filename =
     do
       contents <- readFile filename
-      putStrLn contents
-      let lexer = makeLexer contents
-      case lexer of
-        Left e -> return (Left (LexicalError e))
-        Right (_, stream) ->
-          case parseShaunFile filename stream of
-            Left e -> return (Left e)
-            Right (_, v) -> return (Right v)
+      case removeComments contents of
+        Just code ->
+          do
+            let lexer = makeLexer code
+            case lexer of
+              Left e -> return (Left (LexicalError e))
+              Right (_, stream) ->
+                case parseShaunFile filename stream of
+                  Left e -> return (Left e)
+                  Right (_, v) -> return (Right v)
+        Nothing -> return $! Left (LexicalError "comment not ended")
 
   -- |Writes SHAUN code of the given object into the specified file
   writeShaunToFile :: String -> Object -> IO ()
