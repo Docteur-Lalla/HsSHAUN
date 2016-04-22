@@ -84,9 +84,9 @@ module Shaun.Data.Type where
   getAttribute _ _ = Nothing
 
   -- |Function returning the nth element of a list object
-  getListElem :: Int -> Object -> Maybe Object
-  getListElem _ (ListObj []) = Nothing
-  getListElem n (ListObj l@(_:_))
+  getListElem :: Object -> Int -> Maybe Object
+  getListElem (ListObj []) _ = Nothing
+  getListElem (ListObj l@(_:_)) n
     | length l <= n = Nothing
     | otherwise = Just (l !! n)
   getListElem _ _ = Nothing
